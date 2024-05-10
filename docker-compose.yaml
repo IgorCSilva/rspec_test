@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  spec_test:
+    build:
+      context: .
+    container_name: rspec_test
+    volumes:
+      - .:/app
