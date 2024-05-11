@@ -48,6 +48,18 @@ Now execute the application.
 
 # Install RSpec
 
+1) Add dependency (recommended)
+- rspec_test.gemspec
+```ruby
+...
+
+spec.add_dependency "rspec", "~> 3.6.0"
+
+...
+```
+
+2) Install library
+
 Inside the container install rspec library.
 
 `docker exec -it rspec_test bash`
@@ -131,3 +143,89 @@ rspec
 ```
 
 ## Sharing Setup
+
+Add a new test.
+- spec/sandwich_spec.rb
+```ruby
+  it 'lets me add toppings' do
+    sandwich = Sandwich.new('delicious', [])
+    sandwich.toppings << 'cheese'
+    toppings = sandwich.toppings
+
+    expect(toppings).not_to be_empty
+  end
+```
+
+Run the tests and all should pass.
+`rspec`
+
+### Hooks
+
+The 'before' hook will run before each example.
+Change code to use it.
+
+- spec/sandwich_spec.rb
+```ruby
+RSpec.describe 'An ideal sandwich' do
+
+  before { @sandwich = Sandwich.new('delicious', []) }
+
+  it 'is delicious' do
+    taste = @sandwich.taste
+
+    expect(taste).to eq('delicious')
+  end
+
+  it 'lets me add toppings' do
+    @sandwich.toppings << 'cheese'
+    toppings = @sandwich.toppings
+
+    expect(toppings).not_to be_empty
+  end
+end
+```
+
+All tests should pass.
+
+If you need to clear out a test database before each example, a hook is a great place to do so.
+
+It is a way to reduce duplication, but not an efficient way. Let's use helper methods.
+
+### Helper Methods
+
+```ruby
+
+Sandwich = Struct.new(:taste, :toppings)
+
+RSpec.describe 'An ideal sandwich' do
+
+  def sandwich()
+    @sandwich ||= Sandwich.new('delicious', [])
+  end
+  
+  it 'is delicious' do
+    taste = sandwich().taste
+
+    expect(taste).to eq('delicious')
+  end
+
+  it 'lets me add toppings' do
+    sandwich().toppings << 'cheese'
+    toppings = sandwich().toppings
+
+    expect(toppings).not_to be_empty
+  end
+end
+```
+
+### Sharing Objects With let
+
+Only replace the method with let.
+
+```ruby
+...
+
+let(:sandwich) { Sandwich.new('delicious', []) }
+
+...
+```
