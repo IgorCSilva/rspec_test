@@ -120,3 +120,68 @@ Top 2 slowest example groups:
 ```
 
 ## Running Just What You Need
+
+You can run all tests in a directory.
+example: `rspec spec/unit`
+
+Or a specific test.
+example: `rspec spec/unit/specific_spec.rb`.
+
+Load more than one directory.
+example: `rspec spec/unit spec/products`
+
+And mix.
+example: `rspec spec/unit spec/foo_spec.rb`
+
+### Running Examples by Name
+
+Running example by name using --example or -e option.
+
+`rspec -e milk -fd`
+
+This command will run the examples that contains the work milk (case sensitive)
+
+### Running Specific Failures
+
+You can specify the example by line.
+`rspec ./spec/coffee_spec.rb:25`
+
+### Running Everything that Failed
+
+It's needed to specify a file to save the tests to rerun.
+
+Add configuration at the top of the file.
+
+- spec/coffee_spec.rb
+```ruby
+RSpec.configure do |config|
+  config.example_status_persistence_file_path = 'spec/examples.txt'
+end
+
+...
+```
+
+Now, run the examples.
+`rspec`
+
+and after run only the failed examples.
+`rspec --only-failures`
+
+You should to see only the failed example running.
+
+Let's fix it updating the price function.
+
+- spec/coffee_spec.rb
+```ruby
+...
+  def price()
+    1.00 + ingredients().size * 0.25
+  end
+...
+```
+
+And run `rspec --only-failures`.
+
+We can use the option `--next-failure` too, to walk through the failed examples.
+
+### Focusing Specific Examples
