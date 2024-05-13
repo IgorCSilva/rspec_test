@@ -185,3 +185,149 @@ And run `rspec --only-failures`.
 We can use the option `--next-failure` too, to walk through the failed examples.
 
 ### Focusing Specific Examples
+
+You can mark examples as focused just adding the f to the beggining of the RSpec method name.
+
+- context -> fcontext
+- it -> fit
+- describe -> fdescribe
+
+Change context to fcontext.
+
+- spec/coffee_spec.rb
+```ruby
+  
+  fcontext 'with milk' do
+    ...
+  end
+```
+
+Now, configure the RSpec to run just the focused examples.
+
+- spec/coffee_spec.rb
+```ruby
+  
+RSpec.configure do |config|
+  config.filter_run_when_matching(focus: true)
+  ...
+end
+```
+
+Running `rspec` only he focused examples must be executed.
+
+To finish, remove the f from fcontext.
+
+### Tag Filtering
+
+The line `fcontext 'with milk' do` is a shorthand for `context 'with mild', focus: true do`.
+
+We can do this to `it` and `describe` too.
+
+Use tag this way:
+`rspec --tag last_run_status:failed`.
+
+## Marking Work in Progress
+
+### Starting With the Description
+
+Add empty examples inside the `with milk` context.
+
+```ruby
+it 'is light in color'
+it 'is cooler than 200 degrees Fahrenheit'
+```
+
+Run tests.
+`rspec spec/coffee_spec.rb`
+
+You should see:
+```
+..**
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) A cup of coffee with milk is light in color
+     # Not yet implemented
+     # ./spec/coffee_spec.rb:36
+
+  2) A cup of coffee with milk is cooler than 200 degrees Fahrenheit
+     # Not yet implemented
+     # ./spec/coffee_spec.rb:37
+
+
+Finished in 0.00191 seconds (files took 0.08156 seconds to load)
+4 examples, 0 failures, 2 pending
+```
+
+### Marking Incomplete Work
+
+Mark spec as pending adding `pending` with a description.
+
+- spec/coffee_spec.rb
+```ruby
+...
+    it 'is light in color' do
+      pending 'Color not implemented yet'
+      expect(coffee.color).to be(:light)
+    end
+
+    it 'is cooler than 200 degrees Fahrenheit' do
+      pending 'Temperature not implemented yet'
+      expect(coffee.temperature).to be < 200.0
+    end
+...
+```
+
+Run the tests.
+
+The result is shown below.
+```
+..**
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) A cup of coffee with milk is light in color
+     # Color not implemented yet
+     Failure/Error: expect(coffee.color).to be(:light)
+     
+     NoMethodError:
+       undefined method `color' for an instance of Coffee
+     # ./spec/coffee_spec.rb:38:in `block (3 levels) in <top (required)>'
+
+  2) A cup of coffee with milk is cooler than 200 degrees Fahrenheit
+     # Temperature not implemented yet
+     Failure/Error: expect(coffee.temperature).to be < 200.0
+     
+     NoMethodError:
+       undefined method `temperature' for an instance of Coffee
+     # ./spec/coffee_spec.rb:43:in `block (3 levels) in <top (required)>'
+
+Finished in 0.00206 seconds (files took 0.07988 seconds to load)
+4 examples, 0 failures, 2 pending
+```
+
+The tests won't be marked as failed.
+
+### Completing Work in Progress
+
+Impleent the color and temperature methods inside Coffee class.
+
+```ruby
+...
+  def color()
+    ingredients.include?(:milk) ? :light : :dark
+  end
+
+  def temperature()
+    ingredients.include?(:milk) ? 190.0 : 205.0
+  end
+...
+```
+
+Run the tests.
+
+The tests will be marked as failed, because the pending still exists. Remove them and run tests again.
+
+The tests will pass.
+
+If you don't want run the test, you can use `skip` instead of `pending`.
