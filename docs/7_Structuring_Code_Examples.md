@@ -266,3 +266,106 @@ end
 Most of the time, you probably want to load using a conditional way.
 
 ## Sharing Examples Groups
+
+### Sharing Contexts
+
+Context definition to share:
+```rb
+RSpec.shared_context 'API helpers' do
+  include Rack::Test::Methods
+
+  def app
+    ExpenseTracker::API.new
+  end
+
+  before do
+    basic_authorize 'test_user', 'test_password'
+  end
+end
+```
+
+You can include this way:
+```rb
+RSpec.describe 'Expense Tracker API', :db do
+  include_context 'API helpers'
+  # ...
+end
+```
+
+Or this way, to all tests:
+```rb
+RSpec.configure do |config|
+  config.include_context 'API helpers'
+end
+```
+
+### Sharing Examples
+
+If you want to test a HashKeyValueStore and a FileKeyValueStore that have the same interface, we can do the following:
+
+```rb
+RSpec.shared_examples 'KV store' do |kv_store_class|
+  let(:kv_store) { kv_store_class.new }
+
+  it 'allows you to fetch previously stored values' do
+    kv_store.store(:language, 'Ruby')
+    kv_store.store(:os, 'linux')
+
+    expect(kv_store.fetch(:language)).to eq 'Ruby'
+    expect(kv_store.fetch(:os)).to eq 'linux'
+  end
+
+  it 'raises a KeyError when you fetch an unknown key' do
+    expect { kv_store.fetch(:foo) }.to raise_error(KeyError)
+  end
+end
+```
+
+Then use it like:
+```rb
+require 'hash_kv_store'
+require 'support/kv_store_shared_examples'
+
+RSpec.describe HashKVStore do
+  it_behaves_like 'KV store', HashKVStore
+end
+```
+
+```rb
+require 'file_kv_store'
+require 'support/kv_store_shared_examples'
+
+RSpec.describe FileKVStore do
+  it_behaves_like 'KV store', FileKVStore
+end
+```
+
+By convention, shared examples go in spec/support.
+
+We can share a block of code using it_behaves_like too:
+
+```rb
+RSpec.shared_examples 'KV store' do
+  it 'allows you to fetch previously stored values' do
+    kv_store.store(:language, 'Ruby')
+    kv_store.store(:os, 'linux')
+
+    expect(kv_store.fetch(:language)).to eq 'Ruby'
+    expect(kv_store.fetch(:os)).to eq 'linux'
+  end
+
+  it 'raises a KeyError when you fetch an unknown key' do
+    expect { kv_store.fetch(:foo) }.to raise_error(KeyError)
+  end
+end
+```
+```rb
+require 'tempfile'
+
+RSpec.describe FileKVStore do
+  it_behaves_like 'KV store' do
+    let(:tempfile) { Tempfile.new('kv.store') }
+    let(:kv_store) { FileKVStore.new(tempfile.path) }
+  end
+end
+```
